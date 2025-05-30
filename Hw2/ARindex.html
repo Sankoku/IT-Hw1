@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="uk">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+    <!-- Потрібен для glTF-анімацій -->
+    <script src="https://cdn.jsdelivr.net/gh/c-frame/aframe-extras@6.1.1/dist/aframe-extras.min.js"></script>
+    <title>VR-сцена</title>
+  </head>
+  <body>
+    <a-scene stats>
+      <!-- Ресурси -->
+      <a-assets>
+        <!-- Зображення -->
+        <img id="canestra" src="https://raw.githubusercontent.com/aframevr/sample-assets/master/assets/images/illustration/758px-Canestra_di_frutta_(Caravaggio).jpg" crossorigin="anonymous">
+        <img id="grid" src="https://raw.githubusercontent.com/aframevr/sample-assets/master/assets/images/uvgrid/UV_Grid_Sm.jpg" crossorigin="anonymous">
+
+        <!-- Відео -->
+        <video id="city" src="https://cdn.aframe.io/360-video-boilerplate/video/city.mp4" crossorigin="anonymous"></video>
+
+        <!-- 3D-моделі -->
+        <a-asset-item id="crate-obj" src="https://raw.githubusercontent.com/aframevr/assets/master/test-models/models/crate/crate.obj"></a-asset-item>
+        <a-asset-item id="crate-mtl" src="https://raw.githubusercontent.com/aframevr/assets/master/test-models/models/crate/crate.mtl"></a-asset-item>
+        <a-asset-item id="brainstem" src="https://raw.githubusercontent.com/aframevr/assets/master/test-models/models/glTF-2.0/brainstem/BrainStem.gltf"></a-asset-item>
+
+        <!-- Шрифт MSDF -->
+        <a-asset-item id="cyr-font" src="custom-font-msdf"></a-asset-item>
+      </a-assets>
+
+      <!-- Небо -->
+      <a-sky color="grey"></a-sky>
+
+      <!-- Анімовані об'єкти -->
+      <a-torus position="-2 1 -5" color="green" radius="1.2"
+              animation="property: components.material.material.color; type: color; from: green; to: red; loop: true; dur: 10000">
+      </a-torus>
+
+      <a-torus-knot color="orange" radius="1.2" position="-3 1 -5"
+                    animation="property: rotation; to: 0 0 360; loop: true; dur: 10000">
+      </a-torus-knot>
+
+      <!-- Текстуровані площини -->
+      <a-plane src="#canestra" width="7" height="7" rotation="-55 0 0" position="-2 -2 -5" color="purple"></a-plane>
+      <a-plane src="#grid" width="9" height="2" position="3 1 -9"></a-plane>
+
+      <!-- Циліндри -->
+      <a-cylinder color="yellow" height="2" radius="0.05" position="-2 -1 -5"></a-cylinder>
+      <a-cylinder color="blue" height="2" radius="0.05" position="-3 -1 -5"></a-cylinder>
+
+      <!-- Текст із власним шрифтом -->
+      <a-text value=" Роман" font="#cyr-font" negate="false"
+              color="white" width="20" position="-0.5 1 -6" scale="1 1 1">
+      </a-text>
+
+      <!-- 360-сфера з відео -->
+      <a-videosphere src="#city"></a-videosphere>
+
+      <!-- Модель у форматі OBJ -->
+      <a-obj-model src="#crate-obj" mtl="#crate-mtl" position="2.5 -0.5 -5"></a-obj-model>
+
+      <!-- Модель у форматі glTF -->
+      <a-gltf-model src="#brainstem" position="2 0.5 -5" animation-mixer></a-gltf-model>
+
+      <!-- Джерело світла -->
+      <a-light type="point" intensity="1.5" position="4 0 0"></a-light>
+    </a-scene>
+  </body>
+</html>
