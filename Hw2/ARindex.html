@@ -11,8 +11,8 @@
     <a-scene stats>
       <!-- Ресурси -->
       <a-assets>
-        <!-- MSDF шрифт для української мови -->
-        <a-asset-item id="ubuntu-font" src="https://cdn.jsdelivr.net/gh/etiennepinchon/aframe-fonts/fonts/ubuntu/ubuntu.json"></a-asset-item>
+        <!-- Кастомний MSDF шрифт для української мови -->
+        <!-- Не потрібно завантажувати через a-asset-item для MSDF шрифтів -->
         
         <!-- Перевірені текстури -->
         <img id="canestra" src="https://raw.githubusercontent.com/aframevr/sample-assets/master/assets/images/illustration/758px-Canestra_di_frutta_(Caravaggio).jpg" crossorigin="anonymous">
@@ -68,34 +68,16 @@
                     animation__bounce="property: position; from: 0 -1.5 -4; to: 0 -0.5 -4; dur: 4000; loop: true; dir: alternate; easing: easeInOutQuad">
       </a-gltf-model>
 
-      <!-- Український текст з MSDF шрифтом -->
+      <!-- Основний український текст з кастомним MSDF шрифтом -->
       <a-text value="Вітаємо у віртуальній реальності!" 
-              font="ubuntu-font"
+              font="custom-font-msdf/custom-msdf.json"
+              negate="false"
               color="white" 
               width="12" 
               position="0 4 -6"
               align="center"
               animation="property: scale; from: 1 1 1; to: 1.1 1.1 1.1; dur: 2500; loop: true; dir: alternate">
       </a-text>
-
-      <!-- Додатковий український текст -->
-      <a-text value="Створив: Роман Українець" 
-              font="ubuntu-font"
-              color="#FFD700" 
-              width="8" 
-              position="0 3.2 -6"
-              align="center">
-      </a-text>
-
-      <!-- Інструкції українською -->
-      <a-text value="Натисніть Ctrl+Alt+I для Inspector" 
-              font="ubuntu-font"
-              color="#90EE90" 
-              width="6" 
-              position="0 -3.5 -4"
-              align="center">
-      </a-text>
-
       <!-- Групування додаткових анімованих елементів -->
       <a-entity position="0 2 -8"
                 animation="property: rotation; to: 0 360 0; dur: 20000; loop: true">
@@ -115,6 +97,16 @@
                         animation="property: material.color; from: #DA70D6; to: #00CED1; dur: 7000; loop: true; dir: alternate">
         </a-dodecahedron>
 
+        <!-- Текст на об'єкті що обертається -->
+        <a-text value="Обертаюся!" 
+                font="custom-font-msdf/custom-msdf.json"
+                negate="false"
+                color="#FFFFFF" 
+                width="6" 
+                position="0 -1.5 0"
+                align="center">
+        </a-text>
+
       </a-entity>
 
       <!-- Освітлення -->
@@ -129,6 +121,22 @@
               radius-outer="2"
               animation="property: rotation; to: 0 0 360; dur: 12000; loop: true">
       </a-ring>
+
+      <!-- Панель з українським текстом -->
+      <a-plane position="0 -4 -3" 
+               rotation="-20 0 0" 
+               width="6" height="2" 
+               color="#2F4F4F" 
+               opacity="0.8">
+        <a-text value="Слава Україні! 🇺🇦" 
+                font="custom-font-msdf/custom-msdf.json"
+                negate="false"
+                color="#FFD700" 
+                width="12" 
+                position="0 0 0.01"
+                align="center">
+        </a-text>
+      </a-plane>
 
     </a-scene>
   </body>
