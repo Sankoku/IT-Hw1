@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>AR Макет Криворізької міської ради (зменшено)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- A-Frame -->
+    <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+    <!-- MindAR для A-Frame -->
+    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.1/dist/mindar-image-aframe.prod.js"></script>
+    <style>
+      body {
+        margin: 0;
+        overflow: hidden;
+        width: 100%;
+        height: 100%;
+        position: fixed;
+      }
+      .example-container {
+        width: 100%;
+        height: 100%;
+        position: relative;
+      }
+    </style>
+    <script>
+      // Компонент для стабилизации и сглаживания движения
+      AFRAME.registerComponent('smoothing', {
+        schema: {
+          smoothing: { type: 'number', default: 0.8 },
+          movementThreshold: { type: 'number', default: 0.003 },
+          rotationThreshold: { type: 'number', default: 0.1 }
+        },
+        
+        init: function() {
+          this.visibleStarted = false;
+          this.lastPosition = new THREE.Vector3();
+          this.lastQuaternion = new THREE.Quaternion();
+          this.targetPosition = new THREE.Vector3();
+          this.targetQuaternion = new THREE.Quaternion();
+          this.isMoving = false;
+          this.isRotating = false;
+          
+          this.el.addEventListener('targetFound', () => {
+            // При нахождении маркера
+            this.visibleStarted = true;
+            // Сохранить исходное положение
+            this.lastPosition.copy(this.el.object3D.position);
+            this.lastQuaternion.copy(this.el.object3D.quaternion);
+          });
+          
+          this.el.addEventListener('targetLost', () => {
+            // При потере маркера
+            this.visibleStarted = false;
+          });
+        },
+        
+        tick: function() {
+          if (!this.visibleStarted) return;
+          
+          // Сохраняем текущее положение объекта как целевое
+          this.targetPosition.copy(this.el.object3D.position);
+          this.targetQuaternion.copy(this.el.object3D.quaternion);
+          
+          // Рассчитываем расстояние перемещения
+          const movementDistance = this.lastPosition.distanceTo(this.targetPosition);
+          this.isMoving = movementDistance > this.data.movementThreshold;
+          
+          // Рассчитываем угол поворота
+          const rotationDiff = Math.abs(
+            this.lastQuaternion.angleTo(this.targetQuaternion) * 180 / Math.PI
+          );
+          this.isRotating = rotationDiff > this.data.rotationThreshold;
+          
+          // Если движение слишком маленькое, не делаем интерполяцию
+          if (!this.isMoving && !this.isRotating) return;
+          
+          // Плавная интерполяция для позиции
+          this.el.object3D.position.lerp(this.lastPosition, this.data.smoothing);
+          
+          // Плавная интерполяция для вращения
+          this.el.object3D.quaternion.slerp(this.lastQuaternion, this.data.smoothing);
+          
+          // Сохраняем последние значения для следующего кадра,
+          // но только если изменение больше порога
+          if (this.isMoving) {
+            this.lastPosition.lerp(this.targetPosition, 1 - this.data.smoothing);
+          }
+          
+          if (this.isRotating) {
+            this.lastQuaternion.slerp(this.targetQuaternion, 1 - this.data.smoothing);
+          }
+        }
+      });
+    </script>
+  </head>
+  <body>
+    <div class="example-container">
+      <a-scene mindar-image="imageTargetSrc: ./targets.mind; maxTrack: 1; filterMinCF: 0.001; filterBeta: 0.01;" embedded color-space="sRGB" renderer="colorManagement: true; physicallyCorrectLights: true; antialias: true;" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
+        
+        <!-- Загрузка текстури -->
+        <a-assets>
+          <img id="brick-texture" src="brick_diffuse.jpg" crossorigin="anonymous" />
+        </a-assets>
+
+        <!-- Камера для MindAR -->
+        <a-camera position="0 0 0" look-controls="enabled: false" wasd-controls="enabled: false"></a-camera>
+        
+        <!-- Камера MindAR со стабилизацией -->
+        <a-entity mindar-image-target="targetIndex: 0" smoothing="smoothing: 0.9; movementThreshold: 0.002; rotationThreshold: 0.08">
+          <!-- Контейнер для всієї будівлі з масштабом -->
+          <a-entity position="0 0 0" scale="0.02 0.02 0.02" rotation="-90 0 0">
+            
+            <!-- Основна П-подібна будівля -->
+            <!-- Верхня перемычка (зсунута вліво і повернута на 15 градусів) -->
+            <a-box position="-0.5 2 -13" 
+                   width="30" 
+                   height="4" 
+                   depth="2" 
+                   material="src: #brick-texture" 
+                   rotation="0 15 0">
+            </a-box>
+            
+            <!-- Ліва "нога" -->
+            <a-box position="-14 2 3" 
+                   width="2" 
+                   height="4" 
+                   depth="25" 
+                   material="src: #brick-texture">
+            </a-box>
+            
+            <!-- Невеликий перпендикулярний блок біля лівої ноги -->
+            <a-box position="-11 2 15" 
+                   width="2" 
+                   height="4" 
+                   depth="8" 
+                   material="src: #brick-texture" 
+                   rotation="0 90 0">
+            </a-box>
+            
+            <!-- Права "нога" (ближче до центру) -->
+            <a-box position="12 2 -8" 
+                   width="2" 
+                   height="4" 
+                   depth="20" 
+                   material="src: #brick-texture" 
+                   rotation="0 -15 0">
+            </a-box>
+            
+            <!-- Внутрішній блок -->
+            <a-box position="-10.5 2 0" 
+                   width="7" 
+                   height="4" 
+                   depth="7" 
+                   material="src: #brick-texture" 
+                   rotation="0 90 0">
+            </a-box>
+
+            <!-- Кругла будівля (циліндр + сфера) -->
+            <a-cylinder position="-5 1.2 14"
+                        radius="2.97"
+                        height="3.1"
+                        material="src: #brick-texture"
+                        segments-radial="40">
+            </a-cylinder>
+            <a-sphere position="-5 2.55 14"
+                      radius="3"
+                      material="src: #brick-texture"
+                      segments-width="40"
+                      segments-height="40">
+            </a-sphere>
+
+          </a-entity>
+        </a-entity>
+      </a-scene>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Криворізька міська рада — AR</title>
+    <meta name="description" content="AR сцена з 3D моделлю Криворізької міської ради">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.jsdelivr.net/gh/aframevr/aframe@1c2407b26c61958baa93967b5412487cd94b290b/dist/aframe-master.min.js"></script>
+    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+    <style>
+        .arjs-loader {
+            height: 100%;
+            width: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            background-color: rgba(0, 0, 0, 0.8);
+            z-index: 9999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+        .arjs-loader div {
+            text-align: center;
+            font-size: 1.25em;
+            color: white;
+            margin: 10px;
+        }
+        .arjs-loader .instruction {
+            font-size: 1em;
+            color: #cccccc;
+            max-width: 300px;
+        }
+    </style>
+</head>
+<body style="margin: 0px; overflow: hidden;">
+    <script>
+        // Прибираємо завантажувач після завантаження сцени
+        window.addEventListener('load', function() {
+            setTimeout(function() {
+                var loader = document.querySelector('.arjs-loader');
+                if (loader) {
+                    loader.style.display = 'none';
+                }
+            }, 3000);
+        });
+
+        // Компонент для реєстрації подій маркера
+        AFRAME.registerComponent('marker-events', {
+            init: function () {
+                var marker = this.el;
+                var cityHall = document.querySelector('#cityHallGroup');
+                
+                marker.addEventListener('markerFound', function() {
+                    console.log('Маркер знайдено');
+                    // Прибираємо завантажувач при знаходженні маркера
+                    var loader = document.querySelector('.arjs-loader');
+                    if (loader) {
+                        loader.style.display = 'none';
+                    }
+                    // Показуємо будівлю
+                    if (cityHall) {
+                        cityHall.setAttribute('visible', 'true');
+                    }
+                });
+                
+                marker.addEventListener('markerLost', function() {
+                    console.log('Маркер втрачено');
+                    // Ховаємо будівлю
+                    if (cityHall) {
+                        cityHall.setAttribute('visible', 'false');
+                    }
+                });
+            }
+        });
+
+        // Компонент для легкої анімації обертання
+        AFRAME.registerComponent('gentle-rotation', {
+            init: function () {
+                this.el.setAttribute('animation', {
+                    property: 'rotation',
+                    to: '0 360 0',
+                    loop: true,
+                    dur: 30000,
+                    easing: 'linear'
+                });
+            }
+        });
+
+
+    </script>
+
+    <!-- Завантажувач -->
+    <div class="arjs-loader">
+        <div>Завантаження AR сцени...</div>
+        <div class="instruction">Наведіть камеру на маркер для перегляду 3D моделі Криворізької міської ради</div>
+    </div>
+
+    <!-- AR сцена -->
+    <a-scene vr-mode-ui="enabled: false;" 
+             renderer="logarithmicDepthBuffer: true; antialias: true;" 
+             embedded 
+             arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;">
+        
+        <!-- Активи -->
+        <a-assets>
+            <img id="brick-texture" src="brick_diffuse.jpg" crossOrigin="anonymous" />
+        </a-assets>
+
+        <!-- Маркер з патерном -->
+        <a-marker marker-events
+                  type="pattern"
+                  url="./pattern-marker-KP.patt"
+                  smooth="true"
+                  smoothCount="10"
+                  smoothTolerance="0.01"
+                  smoothThreshold="5"
+                  raycaster="objects: .raycastable">
+            
+            <!-- Група всіх елементів будівлі -->
+            <a-entity id="cityHallGroup" 
+                      visible="false"
+                      gentle-rotation
+                      scale="0.08 0.08 0.08"
+                      position="0 0 0">
+                
+                <!-- Основна П-подібна будівля -->
+                <!-- Верхня перемичка (зсунута вліво і повернута на 15 градусів) -->
+                <a-box position="-0.5 2 -13" 
+                       width="30" 
+                       height="4" 
+                       depth="2" 
+                       src="#brick-texture" 
+                       rotation="0 15 0">
+                </a-box>
+                
+                <!-- Ліва "нога" -->
+                <a-box position="-14 2 3" 
+                       width="2" 
+                       height="4" 
+                       depth="25" 
+                       src="#brick-texture">
+                </a-box>
+                
+                <!-- Невеликий перпендикулярний блок біля лівої ноги -->
+                <a-box position="-11 2 15" 
+                       width="2" 
+                       height="4" 
+                       depth="8" 
+                       src="#brick-texture" 
+                       rotation="0 90 0">
+                </a-box>
+                
+                <!-- Права "нога" (ближче до центру) -->
+                <a-box position="12 2 -8" 
+                       width="2" 
+                       height="4" 
+                       depth="20" 
+                       src="#brick-texture" 
+                       rotation="0 -15 0">
+                </a-box>
+                
+                <!-- Внутрішній блок -->
+                <a-box position="-10.5 2 0" 
+                       width="7" 
+                       height="4" 
+                       depth="7" 
+                       src="#brick-texture" 
+                       rotation="0 90 0">
+                </a-box>
+
+                <!-- Кругла будівля (циліндр + сфера) -->
+                <a-cylinder position="-5 1.2 14"
+                           radius="2.97"
+                           height="3.1"
+                           src="#brick-texture"
+                           segments-radial="40">
+                </a-cylinder>
+                
+                <a-sphere position="-5 2.55 14"
+                         radius="3"
+                         src="#brick-texture"
+                         segments-width="40"
+                         segments-height="40">
+                </a-sphere>
+
+                <!-- Інформаційний текст -->
+                <a-text value="Криворізька міська рада" 
+                       position="0 8 0" 
+                       color="white" 
+                       align="center"
+                       scale="4 4 4"
+                       material="shader: msdf; font: dejavu; color: #ffffff">
+                </a-text>
+            </a-entity>
+        </a-marker>
+
+        <!-- Камера -->
+        <a-entity camera></a-entity>
+    </a-scene>
+</body>
+</html>

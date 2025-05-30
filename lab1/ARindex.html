@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Криворізька міська рада — VR</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+  </head>
+  <body>
+    <a-scene>
+      <!-- Камера з анімацією "від’їзду" -->
+      <a-entity id="cameraRig"
+                position="0 5 25"
+                animation="property: position; 
+                           to: 0 20 50; 
+                           dur: 6000; 
+                           easing: easeInOutQuad; 
+                           loop: true">
+        <a-camera wasd-controls-enabled="false"></a-camera>
+        </a-entity>
+
+      <!-- Освітлення -->
+      <a-light type="directional" position="10 10 10" intensity="1"></a-light>
+      <a-light type="ambient" color="#cccccc"></a-light>
+
+      <!-- Текстура цегли -->
+      <a-assets>
+        <img id="brick-texture" src="brick_diffuse.jpg" />
+      </a-assets>
+
+      <!-- Основна П-подібна будівля -->
+      <!-- Верхня перемичка (зсунута вліво і повернута на 25 градусів) -->
+      <a-box position="-0.5 2 -13" width="30" height="4" depth="2" src="#brick-texture" rotation="0 15 0"></a-box>
+      <!-- Ліва "нога" (повернута на 25 градусів) -->
+      <a-box position="-14 2 3" width="2" height="4" depth="25" src="#brick-texture"> </a-box>
+      <!-- Невеликий перпендикулярний блок біля лівої ноги -->
+      <a-box position="-11 2 15" width="2" height="4" depth="8" src="#brick-texture" rotation="0 90 0"></a-box>
+      <!-- Права "нога" (ближче до центру) -->
+      <a-box position="12 2 -8" width="2" height="4" depth="20" src="#brick-texture" rotation="0 -15 0"> </a-box>
+      <!-- Внутрішній блок -->
+      <a-box position="-10.5 2 0" width="7" height="4" depth="7" src="#brick-texture" rotation="0 90 0"></a-box>
+
+      <!-- Кругла будівля (циліндр + сфера) з розмірами radius=4, height=4, але з позицією вліво -->
+      <a-cylinder position="-5 1.2 14"
+                  radius="2.97"
+                  height="3.1"
+                  src="#brick-texture"
+                  segments-radial="40">
+      </a-cylinder>
+      <a-sphere position="-5 2.55 14"
+                radius="3"
+                src="#brick-texture"
+                segments-width="40"
+                segments-height="40">
+      </a-sphere>
+
+      <!-- Земля -->
+      <a-plane rotation="-90 0 0" width="100" height="100" color="#7CFC00"></a-plane>
+    </a-scene>
+  </body>
+</html>
