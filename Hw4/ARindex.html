@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Lab 4 — AR Markers</title>
+    <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
+    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+    <style>
+      body { margin: 0; overflow: hidden; }
+    </style>
+  </head>
+  <body>
+    <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;">
+
+      <!-- 📌 Маркер HIRO — містить об'єкти з Лаб3 -->
+      <a-marker preset="hiro">
+        <!-- Анімований зелений тор -->
+        <a-torus position="0 0.5 0" color="green" radius="0.5"
+                 animation="property: components.material.material.color; type: color; from: green; to: red; loop: true; dur: 10000">
+        </a-torus>
+
+        <!-- Анімований торус-кнот -->
+        <a-torus-knot color="orange" radius="0.5" position="1 0.5 0"
+                      animation="property: rotation; to: 0 0 360; loop: true; dur: 10000">
+        </a-torus-knot>
+
+        <!-- Текстурована площина -->
+        <a-plane src="https://raw.githubusercontent.com/aframevr/sample-assets/master/assets/images/uvgrid/UV_Grid_Sm.jpg"
+                 width="2.5" height="1.5" position="0 1 -1" rotation="-90 0 0">
+        </a-plane>
+
+        <!-- Два циліндра -->
+        <a-cylinder color="yellow" height="2" radius="0.05" position="0 0 0"></a-cylinder>
+        <a-cylinder color="blue" height="2" radius="0.05" position="1 0 0"></a-cylinder>
+
+        <!-- Текст -->
+        <a-text value="Роман Ляшенко" font="#cyr-font" negate="false"
+                color="white" width="3" position="-1 0.5 -1" scale="1 1 1">
+        </a-text>
+      </a-marker>
+
+      <!-- 📌 Маркер KANJI — простий об'єкт -->
+      <a-marker preset="kanji">
+        <a-sphere color="blue" radius="0.4" position="0 0.5 0">
+          <a-animation attribute="rotation" to="0 360 0" dur="6000" repeat="indefinite"></a-animation>
+        </a-sphere>
+      </a-marker>
+
+      <!-- 📌 Власний маркер -->
+      <a-marker type="pattern" url="./pattern-L.patt">
+        <a-box color="green" position="0 0.5 0" depth="0.5" height="0.5" width="0.5">
+          <a-animation attribute="scale" to="1.2 1.2 1.2" dur="1000" direction="alternate" repeat="indefinite"></a-animation>
+        </a-box>
+      </a-marker>
+
+      <!-- Камера -->
+      <a-entity camera></a-entity>
+    </a-scene>
+  </body>
+</html>
