@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Lab 3 — AR.js з A-Frame</title>
+    <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
+    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+    <style>
+      .arjs-loader {
+        height: 100%;
+        width: 100%;
+        position: absolute;
+        top: 0;
+        left: 0;
+        background-color: rgba(0, 0, 0, 0.8);
+        z-index: 9999;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+      
+      .arjs-loader div {
+        text-align: center;
+        font-size: 1.25em;
+        color: white;
+      }
+    </style>
+  </head>
+  <body style="margin: 0; overflow: hidden;">
+    <div class="arjs-loader">
+      <div>Загрузка, пожалуйста подождите...</div>
+    </div>
+    
+    <a-scene
+      embedded
+      arjs="sourceType: webcam; 
+            debugUIEnabled: false; 
+            trackingMethod: best;
+            detectionMode: mono_and_matrix; 
+            matrixCodeType: 3x3;"
+      renderer="logarithmicDepthBuffer: true;"
+      vr-mode-ui="enabled: false"
+    >
+      <!-- Маркер HIRO -->
+      <a-marker preset="hiro" smooth="true" smoothCount="5" smoothTolerance="0.01" smoothThreshold="2">
+        <!-- Група об'єктів з лаби 2 -->
+        <a-entity
+          id="lab2Content"
+          rotation="-90 0 0"
+          scale="0.3 0.3 0.3"
+          position="0 0 0"
+        >
+          <!-- Анімовані об'єкти -->
+          <a-torus
+            position="0 0.5 0"
+            color="green"
+            radius="0.5"
+            animation="property: components.material.material.color; type: color; from: green; to: red; loop: true; dur: 10000"
+          ></a-torus>
+
+          <a-torus-knot
+            color="orange"
+            radius="0.5"
+            position="1 0.5 0"
+            animation="property: rotation; to: 0 0 360; loop: true; dur: 10000"
+          ></a-torus-knot>
+
+          <!-- Текстурована площина -->
+          <a-plane
+            src="https://raw.githubusercontent.com/aframevr/sample-assets/master/assets/images/uvgrid/UV_Grid_Sm.jpg"
+            width="2.5"
+            height="1.5"
+            position="0 1 -1"
+            rotation="90 0 0"
+          ></a-plane>
+
+          <!-- Циліндри -->
+          <a-cylinder color="yellow" height="2" radius="0.05" position="0 0 0"></a-cylinder>
+          <a-cylinder color="blue" height="2" radius="0.05" position="1 0 0"></a-cylinder>
+
+          <!-- Текст -->
+          <a-text
+            value="Роман Ляшенко"
+            color="white"
+            width="3"
+            position="-1 0.5 -1"
+            scale="1 1 1"
+          ></a-text>
+        </a-entity>
+      </a-marker>
+
+      <!-- Дополнительный маркер KANJI для проверки -->
+      <a-marker preset="kanji" smooth="true" smoothCount="5" smoothTolerance="0.01" smoothThreshold="2">
+        <a-box position="0 0.5 0" color="blue"></a-box>
+      </a-marker>
+
+      <!-- Камера с ограничением ближнего плана для лучшего рендеринга -->
+      <a-entity camera></a-entity>
+    </a-scene>
+
+    <script>
+      // Скрыть загрузчик когда сцена готова
+      document.addEventListener("DOMContentLoaded", function() {
+        const scene = document.querySelector('a-scene');
+        const loader = document.querySelector('.arjs-loader');
+        
+        if (scene.hasLoaded) {
+          loader.style.display = 'none';
+        } else {
+          scene.addEventListener('loaded', function() {
+            loader.style.display = 'none';
+          });
+        }
+      });
+    </script>
+  </body>
+</html>
