@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8" />
+  <title>AR Макет Криворізької міської ради</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script src="https://cdn.jsdelivr.net/npm/three@0.150.1/build/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.1.4/dist/mindar-image-three.prod.js"></script>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      width: 100%;
+      overflow: hidden;
+    }
+    canvas {
+      display: block;
+    }
+    #mindar-container {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+    }
+  </style>
+</head>
+<body>
+  <script>
+    document.addEventListener("DOMContentLoaded", async () => {
+      const mindarThree = new window.MINDAR.IMAGE.MindARThree({
+        container: document.body,
+        imageTargetSrc: "./marker.mind",
+      });
+
+      const { renderer, scene, camera } = mindarThree;
+
+      // Увімкнення рендерингу тіней
+      renderer.shadowMap.enabled = true;
+      renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+      const anchor = mindarThree.addAnchor(0);
+      const group = new THREE.Group();
+      group.scale.set(0.08, 0.08, 0.08); // Зменшений масштаб
+      anchor.group.add(group);
+
+      // Освітлення
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+      scene.add(ambientLight);
+
+      const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+      directionalLight.position.set(10, 15, 10);
+      directionalLight.castShadow = true;
+      
+      // Налаштування тіней
+      directionalLight.shadow.mapSize.width = 2048;
+      directionalLight.shadow.mapSize.height = 2048;
+      directionalLight.shadow.camera.near = 0.5;
+      directionalLight.shadow.camera.far = 100;
+      directionalLight.shadow.camera.left = -50;
+      directionalLight.shadow.camera.right = 50;
+      directionalLight.shadow.camera.top = 50;
+      directionalLight.shadow.camera.bottom = -50;
+      scene.add(directionalLight);
+
+      // Завантаження текстури
+      const textureLoader = new THREE.TextureLoader();
+      textureLoader.load('brick_diffuse.jpg',
+        (texture) => {
+          // Налаштування повторення текстури для кращого вигляду
+          texture.wrapS = THREE.RepeatWrapping;
+          texture.wrapT = THREE.RepeatWrapping;
+          createCityHall(texture);
+        },
+        undefined,
+        (err) => {
+          console.error("Помилка завантаження текстури:", err);
+          // Створюємо будівлю з базовим матеріалом, якщо текстура не завантажилася
+          createCityHall(null);
+        }
+      );
+
+      function createCityHall(texture) {
+        // Створюємо матеріал
+        const brickMaterial = texture ? 
+          new THREE.MeshStandardMaterial({ 
+            map: texture, 
+            roughness: 0.7, 
+            metalness: 0.1 
+          }) :
+          new THREE.MeshStandardMaterial({ 
+            color: 0x8B4513, 
+            roughness: 0.7, 
+            metalness: 0.1 
+          });
+
+        // Основна П-подібна будівля
+        
+        // 1. Верхня перемичка (зсунута вліво і повернута на 15 градусів)
+        const topBeam = new THREE.Mesh(
+          new THREE.BoxGeometry(30, 4, 2), 
+          brickMaterial
+        );
+        topBeam.position.set(-0.5, 2, -13);
+        topBeam.rotation.y = THREE.MathUtils.degToRad(15);
+        topBeam.castShadow = true;
+        topBeam.receiveShadow = true;
+        group.add(topBeam);
+
+        // 2. Ліва "нога"
+        const leftLeg = new THREE.Mesh(
+          new THREE.BoxGeometry(2, 4, 25), 
+          brickMaterial
+        );
+        leftLeg.position.set(-14, 2, 3);
+        leftLeg.castShadow = true;
+        leftLeg.receiveShadow = true;
+        group.add(leftLeg);
+
+        // 3. Невеликий перпендикулярний блок біля лівої ноги
+        const leftBlock = new THREE.Mesh(
+          new THREE.BoxGeometry(2, 4, 8), 
+          brickMaterial
+        );
+        leftBlock.position.set(-11, 2, 15);
+        leftBlock.rotation.y = THREE.MathUtils.degToRad(90);
+        leftBlock.castShadow = true;
+        leftBlock.receiveShadow = true;
+        group.add(leftBlock);
+
+        // 4. Права "нога" (ближче до центру)
+        const rightLeg = new THREE.Mesh(
+          new THREE.BoxGeometry(2, 4, 20), 
+          brickMaterial
+        );
+        rightLeg.position.set(12, 2, -8);
+        rightLeg.rotation.y = THREE.MathUtils.degToRad(-15);
+        rightLeg.castShadow = true;
+        rightLeg.receiveShadow = true;
+        group.add(rightLeg);
+
+        // 5. Внутрішній блок
+        const innerBlock = new THREE.Mesh(
+          new THREE.BoxGeometry(7, 4, 7), 
+          brickMaterial
+        );
+        innerBlock.position.set(-10.5, 2, 0);
+        innerBlock.rotation.y = THREE.MathUtils.degToRad(90);
+        innerBlock.castShadow = true;
+        innerBlock.receiveShadow = true;
+        group.add(innerBlock);
+
+        // 6. Кругла будівля (циліндр)
+        const cylinder = new THREE.Mesh(
+          new THREE.CylinderGeometry(2.97, 2.97, 3.1, 40), 
+          brickMaterial
+        );
+        cylinder.position.set(-5, 1.2, 14);
+        cylinder.castShadow = true;
+        cylinder.receiveShadow = true;
+        group.add(cylinder);
+
+        // 7. Купол (сфера)
+        const dome = new THREE.Mesh(
+          new THREE.SphereGeometry(3, 40, 40, 0, Math.PI * 2, 0, Math.PI / 2), 
+          brickMaterial
+        );
+        dome.position.set(-5, 2.55, 14);
+        dome.castShadow = true;
+        dome.receiveShadow = true;
+        group.add(dome);
+
+        // 8. Текст з назвою
+        const loader = new THREE.FontLoader();
+        // Використовуємо базовий шрифт, оскільки завантаження шрифтів може бути складним
+        createTextMesh();
+      }
+
+      function createTextMesh() {
+        // Створюємо простий текст використовуючи TextGeometry (потрібен font)
+        // Або використовуємо спрайт з текстом
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d');
+        canvas.width = 1024;
+        canvas.height = 256;
+        
+        context.fillStyle = 'white';
+        context.fillRect(0, 0, canvas.width, canvas.height);
+        
+        context.fillStyle = 'black';
+        context.font = '48px Arial';
+        context.textAlign = 'center';
+        context.textBaseline = 'middle';
+        context.fillText('Криворізька міська рада', canvas.width / 2, canvas.height / 2);
+        
+        const texture = new THREE.CanvasTexture(canvas);
+        const spriteMaterial = new THREE.SpriteMaterial({ map: texture });
+        const sprite = new THREE.Sprite(spriteMaterial);
+        sprite.position.set(0, 8, 0);
+        sprite.scale.set(16, 4, 1); // Масштаб як в A-Frame коді (4 * 4)
+        group.add(sprite);
+      }
+
+      // Додаємо плавне обертання
+      let rotationSpeed = 0.005;
+      
+      await mindarThree.start();
+      renderer.setAnimationLoop(() => {
+        // Плавне обертання групи
+        group.rotation.y += rotationSpeed;
+        renderer.render(scene, camera);
+      });
+    });
+  </script>
+</body>
+</html>
