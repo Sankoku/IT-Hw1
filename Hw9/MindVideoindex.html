@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8" />
+    <title>MindAR Two Separate Markers</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.1.4/dist/mindar-image-three.prod.js"></script>
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.150.1/build/three.module.js",
+                "GLTFLoader": "https://unpkg.com/three@0.150.1/examples/jsm/loaders/GLTFLoader.js"
+            }
+        }
+    </script>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+        }
+        
+        #loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 18px;
+            z-index: 100;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        #status {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: white;
+            font-size: 14px;
+            z-index: 99;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px;
+            border-radius: 5px;
+            max-width: 350px;
+            font-family: monospace;
+        }
+
+        .marker-status {
+            margin: 5px 0;
+            padding: 5px;
+            border-radius: 3px;
+        }
+
+        .marker-active {
+            background-color: rgba(0, 255, 0, 0.2);
+        }
+
+        .marker-inactive {
+            background-color: rgba(255, 0, 0, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <div id="loading">
+        <div>Загрузка AR системы...</div>
+        <div style="font-size: 14px; margin-top: 10px;">Разрешите доступ к камере</div>
+    </div>
+    
+    <div id="status">
+        <div id="main-status">Статус: Инициализация...</div>
+        <div id="marker1-status" class="marker-status marker-inactive">Маркер 1 (marker.mind): 3D модель - НЕ НАЙДЕН</div>
+        <div id="marker2-status" class="marker-status marker-inactive">Маркер 2 (marker2.mind): Видео - НЕ НАЙДЕН</div>
+        <div style="font-size: 12px; margin-top: 10px;">Наведите камеру на маркеры</div>
+    </div>
+
+    <script type="module">
+        import * as THREE from "three";
+        import { GLTFLoader } from "GLTFLoader";
+
+        window.addEventListener("DOMContentLoaded", () => {
+            let mindarThree1, mindarThree2;
+            let renderer, scene, camera;
+            let isInitialized = false;
+
+            const start = async () => {
+                try {
+                    const { MindARThree } = window.MINDAR.IMAGE;
+                    
+                    updateMainStatus("Инициализация первого маркера...");
+                    
+                    // === ПЕРВЫЙ МАРКЕР (marker.mind) - 3D МОДЕЛЬ ===
+                    mindarThree1 = new MindARThree({
+                        container: document.body,
+                        imageTargetSrc: "./marker.mind",
+                    });
+
+                    const { renderer: renderer1, scene: scene1, camera: camera1 } = mindarThree1;
+                    renderer = renderer1;
+                    scene = scene1;
+                    camera = camera1;
+
+                    const anchor1 = mindarThree1.addAnchor(0);
+
+                    // Освещение
+                    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+                    scene.add(ambientLight);
+
+                    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+                    directionalLight.position.set(1, 1, 1);
+                    scene.add(directionalLight);
+
+                    // Загрузка 3D модели для первого маркера
+                    const loader = new GLTFLoader();
+                    const modelUrl = "https://raw.githubusercontent.com/hiukim/mind-ar-js/master/examples/image-tracking/assets/band-example/raccoon/scene.gltf";
+                    
+                    loader.load(
+                        modelUrl,
+                        (gltf) => {
+                            gltf.scene.scale.set(0.1, 0.1, 0.1);
+                            gltf.scene.position.set(0, -0.4, 0);
+                            gltf.scene.userData.rotationSpeed = 0.01;
+                            anchor1.group.add(gltf.scene);
+                            console.log("✅ 3D модель загружена для marker.mind");
+                        },
+                        undefined,
+                        (error) => {
+                            console.error("❌ Ошибка загрузки 3D модели:", error);
+                        }
+                    );
+
+                    // Обработчики для первого маркера
+                    anchor1.onTargetFound = () => {
+                        console.log("🎯 МАРКЕР 1 (marker.mind) НАЙДЕН!");
+                        updateMarkerStatus(1, true);
+                    };
+
+                    anchor1.onTargetLost = () => {
+                        console.log("❌ Маркер 1 (marker.mind) потерян");
+                        updateMarkerStatus(1, false);
+                    };
+
+                    updateMainStatus("Инициализация второго маркера...");
+
+                    // === ВТОРОЙ МАРКЕР (marker2.mind) - ВИДЕО ===
+                    mindarThree2 = new MindARThree({
+                        container: document.body,
+                        imageTargetSrc: "./marker2.mind",
+                    });
+
+                    // Используем тот же renderer и scene
+                    mindarThree2.renderer = renderer;
+                    mindarThree2.scene = scene;
+                    mindarThree2.camera = camera;
+
+                    const anchor2 = mindarThree2.addAnchor(0); // Для второго файла это будет индекс 0
+
+                    // Создание видео
+                    const video = document.createElement('video');
+                    video.crossOrigin = 'anonymous';
+                    video.loop = true;
+                    video.muted = true;
+                    video.playsInline = true;
+                    video.preload = 'metadata';
+                    
+                    // Пробуем разные пути к видео
+                    const videoPaths = [
+                        './video.mp4',
+                        '/video.mp4',
+                        'video.mp4',
+                        'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4'
+                    ];
+                    
+                    let videoLoaded = false;
+                    let currentVideoIndex = 0;
+
+                    // Создание видео плоскости
+                    const videoTexture = new THREE.VideoTexture(video);
+                    videoTexture.minFilter = THREE.LinearFilter;
+                    videoTexture.magFilter = THREE.LinearFilter;
+                    
+                    const videoMaterial = new THREE.MeshBasicMaterial({
+                        map: videoTexture,
+                        side: THREE.DoubleSide
+                    });
+                    
+                    const videoGeometry = new THREE.PlaneGeometry(1, 0.6);
+                    const videoMesh = new THREE.Mesh(videoGeometry, videoMaterial);
+                    videoMesh.position.set(0, 0, 0.1);
+                    
+                    // Индикатор для второго маркера
+                    const indicatorGeometry = new THREE.PlaneGeometry(1.2, 0.8);
+                    const indicatorMaterial = new THREE.MeshBasicMaterial({
+                        color: 0xff0000,
+                        transparent: true,
+                        opacity: 0.3,
+                        side: THREE.DoubleSide
+                    });
+                    const indicatorMesh = new THREE.Mesh(indicatorGeometry, indicatorMaterial);
+                    indicatorMesh.position.set(0, 0, 0.05);
+                    
+                    anchor2.group.add(indicatorMesh);
+                    anchor2.group.add(videoMesh);
+
+                    // Функция загрузки видео
+                    const tryLoadVideo = (index) => {
+                        if (index >= videoPaths.length) {
+                            console.error("❌ Все пути к видео не сработали");
+                            const colorMaterial = new THREE.MeshBasicMaterial({
+                                color: 0x00ff00,
+                                side: THREE.DoubleSide
+                            });
+                            videoMesh.material = colorMaterial;
+                            return;
+                        }
+                        
+                        const path = videoPaths[index];
+                        console.log(`🔄 Попытка загрузки видео: ${path}`);
+                        video.src = path;
+                        video.load();
+                    };
+
+                    // Обработчики видео
+                    video.addEventListener('loadeddata', () => {
+                        console.log(`✅ Видео загружено: ${video.src}`);
+                        videoLoaded = true;
+                    });
+
+                    video.addEventListener('error', (e) => {
+                        console.error(`❌ Ошибка видео ${video.src}`);
+                        currentVideoIndex++;
+                        tryLoadVideo(currentVideoIndex);
+                    });
+
+                    // Обработчики для второго маркера
+                    anchor2.onTargetFound = () => {
+                        console.log("🎯 МАРКЕР 2 (marker2.mind) НАЙДЕН!");
+                        updateMarkerStatus(2, true);
+                        indicatorMesh.material.color.setHex(0x00ff00);
+                        
+                        if (videoLoaded) {
+                            video.play().catch(e => console.error("Ошибка воспроизведения:", e));
+                        }
+                    };
+
+                    anchor2.onTargetLost = () => {
+                        console.log("❌ Маркер 2 (marker2.mind) потерян");
+                        updateMarkerStatus(2, false);
+                        indicatorMesh.material.color.setHex(0xff0000);
+                        video.pause();
+                    };
+
+                    // Запуск видео загрузки
+                    tryLoadVideo(0);
+
+                    // Запуск обоих систем
+                    updateMainStatus("Запуск AR камеры...");
+                    
+                    await mindarThree1.start();
+                    await mindarThree2.start();
+                    
+                    updateMainStatus("✅ Система готова! Наведите на маркеры");
+                    isInitialized = true;
+
+                    // Цикл рендеринга
+                    renderer.setAnimationLoop(() => {
+                        // Анимация вращения 3D модели
+                        anchor1.group.children.forEach(child => {
+                            if (child.userData && child.userData.rotationSpeed) {
+                                child.rotation.y += child.userData.rotationSpeed;
+                            }
+                        });
+
+                        renderer.render(scene, camera);
+                    });
+
+                } catch (error) {
+                    console.error("❌ Ошибка инициализации:", error);
+                    updateMainStatus("❌ Ошибка инициализации");
+                }
+            };
+
+            // Функции обновления статуса
+            function updateMainStatus(message) {
+                const statusDiv = document.getElementById('main-status');
+                if (statusDiv) {
+                    statusDiv.textContent = `Статус: ${message}`;
+                }
+            }
+
+            function updateMarkerStatus(markerNum, isActive) {
+                const statusDiv = document.getElementById(`marker${markerNum}-status`);
+                if (statusDiv) {
+                    const markerName = markerNum === 1 ? 'marker.mind' : 'marker2.mind';
+                    const content = markerNum === 1 ? '3D модель' : 'Видео';
+                    const status = isActive ? 'НАЙДЕН' : 'НЕ НАЙДЕН';
+                    
+                    statusDiv.textContent = `Маркер ${markerNum} (${markerName}): ${content} - ${status}`;
+                    statusDiv.className = `marker-status ${isActive ? 'marker-active' : 'marker-inactive'}`;
+                }
+            }
+
+            // Запуск
+            start().catch(console.error);
+
+            // Скрытие загрузочного экрана
+            setTimeout(() => {
+                const loading = document.getElementById("loading");
+                if (loading) loading.style.display = "none";
+            }, 5000);
+        });
+    </script>
+</body>
+</html>

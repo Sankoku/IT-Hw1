@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8" />
+    <title>MindAR Model Tracking</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.1.4/dist/mindar-image-three.prod.js"></script>
+    <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.150.1/build/three.module.js",
+        "GLTFLoader": "https://unpkg.com/three@0.150.1/examples/jsm/loaders/GLTFLoader.js"
+      }
+    }
+    </script>
+    <style>
+      body {
+        margin: 0;
+        overflow: hidden;
+        /* Добавляем эти стили для полного покрытия экрана */
+        width: 100vw;
+        height: 100vh;
+        position: fixed; /* Используем fixed для игнорирования прокрутки и других элементов */
+        top: 0;
+        left: 0;
+      }
+      #loading {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: white;
+        font-size: 18px;
+        z-index: 100;
+        background: rgba(0, 0, 0, 0.7);
+        padding: 20px;
+        border-radius: 10px;
+      }
+    </style>
+</head>
+<body>
+  <div id="loading">Загрузка AR камеры... Убедитесь, что разрешили доступ к камере</div>
+
+  <script type="module">
+    import * as THREE from "three";
+    import { GLTFLoader } from "GLTFLoader";
+
+    window.addEventListener("DOMContentLoaded", () => {
+      const start = async () => {
+        const { MindARThree } = window.MINDAR.IMAGE;
+        const mindarThree = new MindARThree({
+          container: document.body,
+          imageTargetSrc: "./marker.mind",
+        });
+
+        const { renderer, scene, camera } = mindarThree;
+        const anchor = mindarThree.addAnchor(0);
+
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+        scene.add(ambientLight);
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+        directionalLight.position.set(1, 1, 1);
+        scene.add(directionalLight);
+
+        const loader = new GLTFLoader();
+        const modelUrl = "https://raw.githubusercontent.com/hiukim/mind-ar-js/master/examples/image-tracking/assets/band-example/raccoon/scene.gltf";
+        loader.load(
+          modelUrl,
+          (gltf) => {
+            gltf.scene.scale.set(0.1, 0.1, 0.1);
+            gltf.scene.position.set(0, -0.4, 0);
+            anchor.group.add(gltf.scene);
+            console.log("Модель загружена");
+          },
+          undefined,
+          (error) => {
+            console.error("Ошибка загрузки модели", error);
+          }
+        );
+
+        await mindarThree.start();
+
+        renderer.setAnimationLoop(() => {
+          renderer.render(scene, camera);
+        });
+      };
+
+      start().catch(console.error);
+
+      setTimeout(() => {
+        const loading = document.getElementById("loading");
+        if (loading) loading.style.display = "none";
+      }, 3000);
+    });
+  </script>
+</body>
+</html>
