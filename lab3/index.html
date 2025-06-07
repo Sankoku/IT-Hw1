@@ -66,6 +66,8 @@
     <div id="controls">
         <button onclick="resetPosition()">Скинути позицію</button>
         <button onclick="toggleRotation()">Вкл/Викл обертання</button>
+        <button onclick="scaleUp()">Збільшити</button>
+        <button onclick="scaleDown()">Зменшити</button>
     </div>
 
     <script type="module">
@@ -124,8 +126,8 @@
 
             // Створення групи для міської ради
             cityHallGroup = new THREE.Group();
-            cityHallGroup.scale.set(0.6, 0.6, 0.6); // Зменшений масштаб для AR
-            cityHallGroup.position.set(0, -0.5, -1); // Позиція перед користувачем
+            cityHallGroup.scale.set(0.6, 0.6, 0.6); // Збільшений масштаб для AR
+            cityHallGroup.position.set(0, -1.0, -3); // Позиція перед користувачем (далі для великої моделі)
             scene.add(cityHallGroup);
 
             // Створення моделі міської ради
@@ -285,12 +287,33 @@
 
         // Глобальні функції для кнопок
         window.resetPosition = function() {
-            cityHallGroup.position.set(0, -0.5, -1);
+            cityHallGroup.position.set(0, -1.0, -3);
             cityHallGroup.rotation.set(0, 0, 0);
+            cityHallGroup.scale.set(0.6, 0.6, 0.6);
         }
 
         window.toggleRotation = function() {
             isRotating = !isRotating;
+        }
+
+        window.scaleUp = function() {
+            const currentScale = cityHallGroup.scale.x;
+            const newScale = Math.min(currentScale * 1.15, 2.0); // Максимальний розмір 2.0
+            cityHallGroup.scale.set(newScale, newScale, newScale);
+            
+            // Автоматично відсуваємо модель далі при збільшенні
+            const distance = Math.max(-3, -3 - (newScale - 0.6) * 2);
+            cityHallGroup.position.z = distance;
+        }
+
+        window.scaleDown = function() {
+            const currentScale = cityHallGroup.scale.x;
+            const newScale = Math.max(currentScale * 0.85, 0.05); // Мінімальний розмір 0.05
+            cityHallGroup.scale.set(newScale, newScale, newScale);
+            
+            // Автоматично приближуємо модель при зменшенні
+            const distance = Math.max(-3, -3 - (newScale - 0.6) * 2);
+            cityHallGroup.position.z = distance;
         }
     </script>
 </body>
