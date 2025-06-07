@@ -126,8 +126,8 @@
 
             // Створення групи для міської ради
             cityHallGroup = new THREE.Group();
-            cityHallGroup.scale.set(0.6, 0.6, 0.6); // Збільшений масштаб для AR
-            cityHallGroup.position.set(0, -1.0, -3); // Позиція перед користувачем (далі для великої моделі)
+            cityHallGroup.scale.set(0.08, 0.08, 0.08); // Фіксований розмір
+            cityHallGroup.position.set(0, -0.5, -1); // Фіксована позиція
             scene.add(cityHallGroup);
 
             // Створення моделі міської ради
@@ -287,9 +287,9 @@
 
         // Глобальні функції для кнопок
         window.resetPosition = function() {
-            cityHallGroup.position.set(0, -1.0, -3);
+            cityHallGroup.position.set(0, -0.5, -1);
             cityHallGroup.rotation.set(0, 0, 0);
-            cityHallGroup.scale.set(0.6, 0.6, 0.6);
+            cityHallGroup.scale.set(0.08, 0.08, 0.08);
         }
 
         window.toggleRotation = function() {
@@ -298,22 +298,14 @@
 
         window.scaleUp = function() {
             const currentScale = cityHallGroup.scale.x;
-            const newScale = Math.min(currentScale * 1.15, 2.0); // Максимальний розмір 2.0
+            const newScale = Math.min(currentScale * 1.2, 2.0); // Максимальний розмір 2.0
             cityHallGroup.scale.set(newScale, newScale, newScale);
-            
-            // Автоматично відсуваємо модель далі при збільшенні
-            const distance = Math.max(-3, -3 - (newScale - 0.6) * 2);
-            cityHallGroup.position.z = distance;
         }
 
         window.scaleDown = function() {
             const currentScale = cityHallGroup.scale.x;
-            const newScale = Math.max(currentScale * 0.85, 0.05); // Мінімальний розмір 0.05
+            const newScale = Math.max(currentScale * 0.8, 0.01); // Мінімальний розмір 0.01
             cityHallGroup.scale.set(newScale, newScale, newScale);
-            
-            // Автоматично приближуємо модель при зменшенні
-            const distance = Math.max(-3, -3 - (newScale - 0.6) * 2);
-            cityHallGroup.position.z = distance;
         }
     </script>
 </body>
