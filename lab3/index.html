@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebXR AR Макет Криворізької міської ради</title>
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.176.0/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.176.0/examples/jsm/"
+        }
+    }
+    </script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #121212;
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+        }
+        
+        #info {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: white;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 14px;
+            z-index: 100;
+        }
+        
+        #controls {
+            position: absolute;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 100;
+            display: flex;
+            gap: 10px;
+        }
+        
+        button {
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.8);
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        button:hover {
+            background: rgba(255, 255, 255, 1);
+        }
+    </style>
+</head>
+<body>
+    <div id="info">
+        <div>WebXR AR Криворізька міська рада</div>
+        <div>Натисніть "ENTER AR" для AR режиму</div>
+    </div>
+    
+    <div id="controls">
+        <button onclick="resetPosition()">Скинути позицію</button>
+        <button onclick="toggleRotation()">Вкл/Викл обертання</button>
+    </div>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { ARButton } from 'three/addons/webxr/ARButton.js';
+
+        let scene, camera, renderer, cityHallGroup;
+        let isRotating = true;
+        let rotationSpeed = 0.005;
+
+        document.addEventListener("DOMContentLoaded", () => {
+            initialize();
+        });
+
+        function initialize() {
+            // Створення сцени
+            scene = new THREE.Scene();
+
+            // Створення камери
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+
+            // Створення рендерера
+            renderer = new THREE.WebGLRenderer({
+                antialias: true,
+                alpha: true
+            });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            document.body.appendChild(renderer.domElement);
+
+            // Увімкнення тіней
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+            // Увімкнення WebXR
+            renderer.xr.enabled = true;
+
+            // Освітлення
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            scene.add(ambientLight);
+
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(10, 15, 10);
+            directionalLight.castShadow = true;
+            
+            // Налаштування тіней
+            directionalLight.shadow.mapSize.width = 2048;
+            directionalLight.shadow.mapSize.height = 2048;
+            directionalLight.shadow.camera.near = 0.5;
+            directionalLight.shadow.camera.far = 100;
+            directionalLight.shadow.camera.left = -50;
+            directionalLight.shadow.camera.right = 50;
+            directionalLight.shadow.camera.top = 50;
+            directionalLight.shadow.camera.bottom = -50;
+            scene.add(directionalLight);
+
+            // Створення групи для міської ради
+            cityHallGroup = new THREE.Group();
+            cityHallGroup.scale.set(0.01, 0.01, 0.01); // Зменшений масштаб для AR
+            cityHallGroup.position.set(0, -0.5, -1); // Позиція перед користувачем
+            scene.add(cityHallGroup);
+
+            // Створення моделі міської ради
+            createCityHall();
+
+            // Додавання AR кнопки
+            const arButton = ARButton.createButton(renderer, {
+                optionalFeatures: ['dom-overlay'],
+                domOverlay: { root: document.body }
+            });
+            document.body.appendChild(arButton);
+
+            // Обробники подій WebXR
+            renderer.xr.addEventListener("sessionstart", () => {
+                console.log("WebXR AR сесію розпочато");
+                document.getElementById('info').style.display = 'none';
+            });
+
+            renderer.xr.addEventListener("sessionend", () => {
+                console.log("WebXR AR сесію завершено");
+                document.getElementById('info').style.display = 'block';
+            });
+
+            // Цикл анімації
+            renderer.setAnimationLoop(() => {
+                if (isRotating) {
+                    cityHallGroup.rotation.y += rotationSpeed;
+                }
+                renderer.render(scene, camera);
+            });
+
+            // Обробка зміни розміру вікна
+            window.addEventListener('resize', onWindowResize);
+        }
+
+        function createCityHall() {
+            // Створюємо матеріал для цегли
+            const brickMaterial = new THREE.MeshStandardMaterial({
+                color: 0x8B4513, // Коричневий колір цегли
+                roughness: 0.7,
+                metalness: 0.1
+            });
+
+            // 1. Верхня перемичка (зсунута вліво і повернута на 15 градусів)
+            const topBeam = new THREE.Mesh(
+                new THREE.BoxGeometry(30, 4, 2),
+                brickMaterial
+            );
+            topBeam.position.set(-0.5, 2, -13);
+            topBeam.rotation.y = THREE.MathUtils.degToRad(15);
+            topBeam.castShadow = true;
+            topBeam.receiveShadow = true;
+            cityHallGroup.add(topBeam);
+
+            // 2. Ліва "нога"
+            const leftLeg = new THREE.Mesh(
+                new THREE.BoxGeometry(2, 4, 25),
+                brickMaterial
+            );
+            leftLeg.position.set(-14, 2, 3);
+            leftLeg.castShadow = true;
+            leftLeg.receiveShadow = true;
+            cityHallGroup.add(leftLeg);
+
+            // 3. Невеликий перпендикулярний блок біля лівої ноги
+            const leftBlock = new THREE.Mesh(
+                new THREE.BoxGeometry(2, 4, 8),
+                brickMaterial
+            );
+            leftBlock.position.set(-11, 2, 15);
+            leftBlock.rotation.y = THREE.MathUtils.degToRad(90);
+            leftBlock.castShadow = true;
+            leftBlock.receiveShadow = true;
+            cityHallGroup.add(leftBlock);
+
+            // 4. Права "нога" (ближче до центру)
+            const rightLeg = new THREE.Mesh(
+                new THREE.BoxGeometry(2, 4, 20),
+                brickMaterial
+            );
+            rightLeg.position.set(12, 2, -8);
+            rightLeg.rotation.y = THREE.MathUtils.degToRad(-15);
+            rightLeg.castShadow = true;
+            rightLeg.receiveShadow = true;
+            cityHallGroup.add(rightLeg);
+
+            // 5. Внутрішній блок
+            const innerBlock = new THREE.Mesh(
+                new THREE.BoxGeometry(7, 4, 7),
+                brickMaterial
+            );
+            innerBlock.position.set(-10.5, 2, 0);
+            innerBlock.rotation.y = THREE.MathUtils.degToRad(90);
+            innerBlock.castShadow = true;
+            innerBlock.receiveShadow = true;
+            cityHallGroup.add(innerBlock);
+
+            // 6. Кругла будівля (циліндр)
+            const cylinder = new THREE.Mesh(
+                new THREE.CylinderGeometry(2.97, 2.97, 3.1, 40),
+                brickMaterial
+            );
+            cylinder.position.set(-5, 1.2, 14);
+            cylinder.castShadow = true;
+            cylinder.receiveShadow = true;
+            cityHallGroup.add(cylinder);
+
+            // 7. Купол (сфера)
+            const dome = new THREE.Mesh(
+                new THREE.SphereGeometry(3, 40, 40, 0, Math.PI * 2, 0, Math.PI / 2),
+                brickMaterial
+            );
+            dome.position.set(-5, 2.55, 14);
+            dome.castShadow = true;
+            dome.receiveShadow = true;
+            cityHallGroup.add(dome);
+
+            // 8. Текст з назвою
+            createTextSprite();
+        }
+
+        function createTextSprite() {
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            canvas.width = 1024;
+            canvas.height = 256;
+
+            // Фон
+            context.fillStyle = 'rgba(255, 255, 255, 0.9)';
+            context.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Рамка
+            context.strokeStyle = 'black';
+            context.lineWidth = 4;
+            context.strokeRect(0, 0, canvas.width, canvas.height);
+
+            // Текст
+            context.fillStyle = 'black';
+            context.font = 'bold 48px Arial';
+            context.textAlign = 'center';
+            context.textBaseline = 'middle';
+            context.fillText('Криворізька міська рада', canvas.width / 2, canvas.height / 2);
+
+            const texture = new THREE.CanvasTexture(canvas);
+            const spriteMaterial = new THREE.SpriteMaterial({ map: texture });
+            const sprite = new THREE.Sprite(spriteMaterial);
+            sprite.position.set(0, 8, 0);
+            sprite.scale.set(16, 4, 1);
+            cityHallGroup.add(sprite);
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        // Глобальні функції для кнопок
+        window.resetPosition = function() {
+            cityHallGroup.position.set(0, -0.5, -1);
+            cityHallGroup.rotation.set(0, 0, 0);
+        }
+
+        window.toggleRotation = function() {
+            isRotating = !isRotating;
+        }
+    </script>
+</body>
+</html>
